@@ -193,7 +193,7 @@ Item {
             }
             iconComponent: Component {
               OpticalGlyph {
-                text: "⌨"
+                text: "󰌌"
                 implicitWidth: Style.space(32)
                 implicitHeight: Style.space(32)
                 width: implicitWidth

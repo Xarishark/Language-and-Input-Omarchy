@@ -3,7 +3,7 @@
 Keyboard layouts, layout-switch shortcuts, and display languages in one
 keyboard-friendly panel for **Omarchy Quattro**.
 
-A third-party `panel` plugin with ID `xarishark.language-input`. Built with
+A [third-party Omarchy plugin](https://github.com/Xarishark/Language-and-Input-Omarchy) with ID `xarishark.language-input`. Built with
 QML/Quickshell and Omarchy's shared UI components. No top-bar widget.
 
 ![Language & Input settings panel](language-and-input.png)
@@ -62,6 +62,38 @@ omarchy-shell shell toggle xarishark.language-input '{}'
 When enabled, the plugin automatically adds **Language & Input** to the root
 Super+Space menu. Existing menu entries and comments are preserved. The entry
 is hidden after the plugin is removed.
+
+## Update and remove
+
+Update from the repository's current branch:
+
+```sh
+omarchy plugin update xarishark.language-input
+```
+
+Remove the plugin:
+
+```sh
+omarchy plugin remove xarishark.language-input
+```
+
+Removal unloads the panel and deletes its installed Git checkout. Saved
+keyboard settings, account/system languages, generated locales, and the
+keyboard backup remain in place. The menu entry remains in your extension
+file but is hidden while the plugin is absent; reinstalling makes it available
+again.
+
+**Optional cleanup after uninstall:** remove the automatically generated menu
+entry with:
+
+```sh
+sed -i -E '/^[[:space:]]*"language-input": \{.*\}[[:space:]]*,?$/d' ~/.config/omarchy/extensions/omarchy-menu.jsonc
+```
+
+This removes only the generated one-line entry, retaining other menu entries
+and comments. If you reformatted that entry across multiple lines, remove its
+`language-input` object manually instead. Saved keyboard and language settings
+are unaffected.
 
 ## Keyboard controls
 

@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from menu_setup import register, without_comments
 
@@ -42,6 +43,28 @@ class MenuSetupTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 register(path)
             self.assertEqual(path.read_text(), 'invalid')
+
+    def test_symlink_menu_is_not_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'target.jsonc'
+            target.write_text('{}')
+            path = Path(directory) / 'menu.jsonc'
+            path.symlink_to(target)
+            with self.assertRaises(ValueError):
+                register(path)
+            self.assertEqual(target.read_text(), '{}')
+
+    def test_concurrent_user_edit_is_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'menu.jsonc'
+            path.write_text('{}')
+            def edit_while_parsing(text):
+                path.write_text('{"personal": {"label": "Personal"}}')
+                return without_comments(text)
+            with patch('menu_setup.without_comments', side_effect=edit_while_parsing):
+                with self.assertRaises(ValueError):
+                    register(path)
+            self.assertIn('"personal"', path.read_text())
 
 
 if __name__ == '__main__':

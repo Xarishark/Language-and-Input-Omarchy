@@ -25,7 +25,8 @@ def register(path):
         fcntl.flock(lock, fcntl.LOCK_EX)
         if path.is_symlink() or (path.exists() and not path.is_file()):
             raise ValueError('Menu extension must be a regular file')
-        text = path.read_text() if path.exists() else '{}\n'
+        existed = path.exists()
+        text = path.read_text() if existed else '{}\n'
         stripped = without_comments(text)
         # JSONC accepts trailing commas. Preserve original bytes when writing.
         cleaned = re.sub(r'"(?:\\.|[^"\\])*"|,\s*(?=[}\]])',
@@ -45,6 +46,8 @@ def register(path):
             'when': f'[[ -f "$HOME/.config/omarchy/plugins/{PLUGIN_ID}/manifest.json" ]]',
         }
         updated = text[:end] + comma + '\n  ' + json.dumps(ENTRY_ID) + ': ' + json.dumps(entry, ensure_ascii=False) + '\n' + text[end:]
+        if path.is_symlink() or path.exists() != existed or (existed and path.read_text() != text):
+            raise ValueError("Menu extension changed during registration; refusing to overwrite it")
         atomic_write(path, updated.encode(), path.stat().st_mode & 0o777 if path.exists() else 0o600)
 
 
