@@ -17,6 +17,12 @@ changes may require logging out and back in.
 
 ## Install
 
+**Installing and enabling this plugin automatically adds “Language & Input”
+to your Omarchy menu** by updating
+`~/.config/omarchy/extensions/omarchy-menu.jsonc`. Existing entries and comments
+are preserved. Keyboard and language settings change only when you choose them
+in the panel.
+
 ```sh
 omarchy plugin add https://github.com/Xarishark/Language-and-Input-Omarchy.git --enable
 ```
