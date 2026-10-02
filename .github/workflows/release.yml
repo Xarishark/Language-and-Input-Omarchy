@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manifest-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Read manifest
+        id: manifest
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          manifest = json.loads(Path("manifest.json").read_text())
+          version = manifest.get("version", "")
+          # Stable releases use a full numeric major.minor.patch version.
+          if not isinstance(version, str) or not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
+              raise SystemExit("manifest.json version must be a stable major.minor.patch version")
+          name = manifest.get("name", "")
+          if not isinstance(name, str) or not name.strip() or "\n" in name or "\r" in name:
+              raise SystemExit("manifest.json must contain a single-line name")
+          if manifest.get("schemaVersion") != 1 or manifest.get("kinds") != ["panel"]:
+              raise SystemExit("Expected the Omarchy panel manifest")
+          for entry in manifest.get("entryPoints", {}).values():
+              if not isinstance(entry, str) or not Path(entry).is_file():
+                  raise SystemExit("Manifest entry point is missing")
+          if not manifest.get("entryPoints", {}).get("panel"):
+              raise SystemExit("Manifest panel entry point is required")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"version={version}\ntag=v{version}\nname={name}\n")
+          PY
+
+      - name: Test
+        run: |
+          python3 -B -m unittest -v test_keyboard.py test_locale_backend.py test_menu_setup.py
+          node test_shortcut.cjs
+
+      - name: Publish new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.manifest.outputs.tag }}
+          VERSION: ${{ steps.manifest.outputs.version }}
+          NAME: ${{ steps.manifest.outputs.name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          errors=$(mktemp)
+          if release=$(gh api "repos/$GH_REPO/releases/tags/$TAG" 2>"$errors"); then
+            if [[ $(jq -r '.draft' <<<"$release") != false ]]; then
+              echo "::error::An existing draft uses $TAG. Resolve it before retrying."
+              exit 1
+            fi
+            echo "Release $TAG already exists; leaving it unchanged."
+            exit 0
+          elif ! grep -q '(HTTP 404)' "$errors"; then
+            cat "$errors" >&2
+            exit 1
+          fi
+
+          if gh api "repos/$GH_REPO/git/ref/tags/$TAG" > /dev/null 2>"$errors"; then
+            echo "::error::Tag $TAG already exists without a published release. Refusing to reuse it."
+            exit 1
+          elif ! grep -q '(HTTP 404)' "$errors"; then
+            cat "$errors" >&2
+            exit 1
+          fi
+
+          # No binary assets: the plugin is installed directly from Git.
+          # GitHub locks the new tag when repository release immutability is enabled.
+          gh release create "$TAG" --target "$GITHUB_SHA" \
+            --title "$NAME $VERSION" --generate-notes
