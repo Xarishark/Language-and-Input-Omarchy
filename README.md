@@ -38,14 +38,13 @@ only for the shortcut development tests.
 
 ## Install
 
-Run in a terminal, replacing the placeholder with this repository's Git URL:
+Run in a terminal:
 
 ```sh
-omarchy plugin add <git-repository-url> --enable
+omarchy plugin add https://github.com/Xarishark/Language-and-Input-Omarchy.git --enable
 ```
 
-The repository has not been published yet, so no public installation URL is
-available. Omarchy installs plugins into
+Omarchy installs plugins into
 `~/.config/omarchy/plugins/<plugin-id>/`.
 
 ### Open the panel
@@ -60,8 +59,9 @@ To toggle it:
 omarchy-shell shell toggle xarishark.language-input '{}'
 ```
 
-A **Language & Input** entry in the Super+Space Omarchy menu is planned;
-this plugin does not install that entry yet.
+When enabled, the plugin automatically adds **Language & Input** to the root
+Super+Space menu. Existing menu entries and comments are preserved. The entry
+is hidden after the plugin is removed.
 
 ## Keyboard controls
 
@@ -132,7 +132,7 @@ Run checks from the repository root:
 
 ```sh
 omarchy plugin validate .
-python3 -m unittest -v test_keyboard.py test_locale_backend.py
+python3 -m unittest -v test_keyboard.py test_locale_backend.py test_menu_setup.py
 node test_shortcut.cjs
 ```
 
@@ -141,7 +141,7 @@ To install a local development copy:
 ```sh
 plugin_dir="$HOME/.config/omarchy/plugins/xarishark.language-input"
 mkdir -p "$plugin_dir"
-cp manifest.json *.qml Shortcut.js keyboard.py locale_backend.py README.md LICENSE "$plugin_dir/"
+cp manifest.json *.qml Shortcut.js keyboard.py locale_backend.py menu_setup.py README.md LICENSE "$plugin_dir/"
 omarchy-shell shell rescanPlugins
 omarchy plugin enable xarishark.language-input
 omarchy restart shell
@@ -162,6 +162,7 @@ keyboard and locale integration in the real running Omarchy session.
 | `SwitchHotkey.qml`, `Shortcut.js`, `Keycaps.qml` | Shortcut recording, mapping, and display |
 | `SystemLanguage.qml`, `LocaleModel.qml` | Language selection and asynchronous locale state |
 | `LayoutPicker.qml` | Shared list and filtering UI |
+| `menu_setup.py` | Automatic user menu registration |
 | `keyboard.py`, `locale_backend.py` | System discovery, validation, and configuration writes |
 | `test_*.py`, `test_shortcut.cjs` | Backend and shortcut regression tests |
 

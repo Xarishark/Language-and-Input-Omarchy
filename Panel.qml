@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Io
 import qs.Ui
 import qs.Commons
 
@@ -12,6 +13,14 @@ Item {
   property bool switchOpen: false
   property string switchMode: "record"
   function openSwitch(mode) { switchMode = mode; switchOpen = true }
+  property string menuError: ""
+  Component.onCompleted: menuSetup.running = true
+  Process {
+    id: menuSetup
+    command: ["python3", decodeURIComponent(Qt.resolvedUrl("menu_setup.py").toString().replace(/^file:\/\//, ""))]
+    stderr: StdioCollector { onStreamFinished: if (text.trim()) root.menuError = text.trim() }
+    onExited: function(code) { if (code !== 0 && !root.menuError) root.menuError = "Could not register Language & Input in the Omarchy menu." }
+  }
   property bool localeOpen: false
   property string localeScope: "user"
   function openLocale(scope) { localeScope = scope; localeOpen = true }
@@ -279,7 +288,7 @@ Item {
           Text {
             width: parent.width
             visible: text !== ""
-            text: localeModel.error || localeModel.notice
+            text: root.menuError || localeModel.error || localeModel.notice
             color: Color.urgent
             textFormat: Text.PlainText
             font.family: Style.font.family
