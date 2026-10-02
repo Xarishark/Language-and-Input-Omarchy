@@ -3,7 +3,7 @@
 Keyboard layouts, layout-switch shortcuts, and display languages in one
 keyboard-friendly panel for **Omarchy Quattro**. No top-bar widget.
 
-![Language & Input settings panel](language-and-input.png)
+![Language & Input settings panel](preview.png)
 
 ## Features
 
