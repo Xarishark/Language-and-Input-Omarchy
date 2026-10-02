@@ -28,7 +28,27 @@ Item {
     width: parent.width
     visible: !!root.pending
     spacing: Style.spacing.panelGap
-    PanelHero { title: "Authentication required"; meta: root.pending ? root.pending.label : "" }
+    Column {
+      width: parent.width
+      spacing: Style.space(2)
+      Text {
+        width: parent.width
+        text: "Authentication required"
+        color: Color.foreground
+        font.family: Style.font.family
+        font.pixelSize: Style.font.title
+        font.bold: true
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+      }
+      PanelSectionHeader {
+        width: parent.width
+        text: root.pending ? root.pending.label.toUpperCase() : ""
+        font.letterSpacing: 1.2
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+      }
+    }
     Text {
       width: parent.width
       text: root.pending && root.pending.requiresGeneration
@@ -38,6 +58,7 @@ Item {
       font.family: Style.font.family
       font.pixelSize: Style.font.body
       wrapMode: Text.WordWrap
+      horizontalAlignment: Text.AlignHCenter
     }
     Row {
       anchors.horizontalCenter: parent.horizontalCenter
