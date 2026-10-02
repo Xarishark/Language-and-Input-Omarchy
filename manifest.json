@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "xarishark.language-input",
+  "name": "Language & Input",
+  "version": "1.0.0",
+  "author": "Xarishark",
+  "description": "Manage keyboard layouts, layout-switch shortcuts, and display languages in Omarchy Shell",
+  "keepLoaded": true,
+  "kinds": [
+    "panel"
+  ],
+  "entryPoints": {
+    "panel": "Panel.qml"
+  },
+  "license": "MIT"
+}
