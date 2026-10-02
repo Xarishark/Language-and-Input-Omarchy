@@ -1,166 +1,85 @@
 # Language & Input
 
 Keyboard layouts, layout-switch shortcuts, and display languages in one
-keyboard-friendly panel for **Omarchy Quattro**.
-
-A [third-party Omarchy plugin](https://github.com/Xarishark/Language-and-Input-Omarchy) with ID `xarishark.language-input`. Built with
-QML/Quickshell and Omarchy's shared UI components. No top-bar widget.
+keyboard-friendly panel for **Omarchy Quattro**. No top-bar widget.
 
 ![Language & Input settings panel](language-and-input.png)
 
 ## Features
 
-- **Input Languages** — browse the system XKB catalogue by language, choose a
-  layout or variant, and add, remove, or reorder your configured layouts.
-- **Input Switching** — choose a layout-switch shortcut from the system list
-  or record a supported combination, with keycap previews and validation.
-- **System Language** — change your display language or the system language
-  for the login screen, system services, and new accounts.
+- **Input Languages** — browse languages and layout variants, add or remove
+  layouts, and reorder with the keyboard or mouse.
+- **Input Switching** — record a supported shortcut or choose one from the list.
+- **System Language** — change your display language or the system default.
 
-Layout changes and list selections autosave. Reordering saves when you drop
-the language; recorded shortcuts save only after confirmation. A header icon
-shows save progress and success. Errors appear in the panel.
-
-## Requirements
-
-Developed and tested on **Omarchy 4.0.4**, using the current Quattro plugin
-architecture and Lua keyboard configuration.
-
-- A running Omarchy Shell and Hyprland session.
-- Python 3, `hyprctl`, and `xkbcli` from libxkbcommon.
-- System XKB rules and locale sources, including `/usr/share/i18n/SUPPORTED`.
-- `locale`, `localedef`, `systemctl`, `localectl`, and `pkexec`.
-- UWSM for applying account language settings at the next login.
-- `~/.config/hypr/input.lua` loaded by your Hyprland configuration.
-
-No build step or additional Python packages are required. Node.js is needed
-only for the shortcut development tests.
+Settings autosave. Recorded shortcuts require confirmation, and language
+changes may require logging out and back in.
 
 ## Install
-
-Run in a terminal:
 
 ```sh
 omarchy plugin add https://github.com/Xarishark/Language-and-Input-Omarchy.git --enable
 ```
 
-Omarchy installs plugins into
-`~/.config/omarchy/plugins/<plugin-id>/`.
+Open **Super+Space → Language & Input**. The menu entry is added automatically.
 
-### Open the panel
-
-```sh
-omarchy-shell shell summon xarishark.language-input '{}'
-```
-
-To toggle it:
-
-```sh
-omarchy-shell shell toggle xarishark.language-input '{}'
-```
-
-When enabled, the plugin automatically adds **Language & Input** to the root
-Super+Space menu. Existing menu entries and comments are preserved. The entry
-is hidden after the plugin is removed.
-
-## Update and remove
-
-Update from the repository's current branch:
-
-```sh
-omarchy plugin update xarishark.language-input
-```
-
-Remove the plugin:
+## Uninstall
 
 ```sh
 omarchy plugin remove xarishark.language-input
 ```
 
-Removal unloads the panel and deletes its installed Git checkout. Saved
-keyboard settings, account/system languages, generated locales, and the
-keyboard backup remain in place. The menu entry remains in your extension
-file but is hidden while the plugin is absent; reinstalling makes it available
-again.
-
-**Optional cleanup after uninstall:** remove the automatically generated menu
-entry with:
+Saved keyboard and language settings remain. The menu entry becomes hidden.
+To remove that entry too, run this optional cleanup command:
 
 ```sh
 sed -i -E '/^[[:space:]]*"language-input": \{.*\}[[:space:]]*,?$/d' ~/.config/omarchy/extensions/omarchy-menu.jsonc
 ```
 
-This removes only the generated one-line entry, retaining other menu entries
-and comments. If you reformatted that entry across multiple lines, remove its
-`language-input` object manually instead. Saved keyboard and language settings
-are unaffected.
+This removes the generated one-line entry and preserves other menu entries.
+If you reformatted it across multiple lines, remove its `language-input`
+object manually instead.
+
+## Requirements
+
+- Omarchy Quattro with Hyprland and UWSM; tested on **Omarchy 4.0.4**.
+- Python 3 and the system XKB/locale tools supplied by Omarchy.
+- The current `~/.config/hypr/input.lua` keyboard configuration.
+
+No build step or additional Python packages are needed. Shielded language
+choices request administrator authentication.
 
 ## Keyboard controls
 
-| Context | Keys | Action |
-| --- | --- | --- |
-| Main menu | ↑ / ↓ | Navigate languages and actions |
-| Main menu | Enter | Activate the selected action |
-| Input language | Hold Alt + ↑ / ↓ | Move the selected language; release Alt to save |
-| Input language | Delete | Remove the selected language |
-| Searchable lists | Type | Filter the list immediately |
-| Searchable lists | ↑ / ↓, Enter | Navigate and select a result |
-| Hotkey recording | Ctrl+S | Save a valid combination |
-| Hotkey recording | Ctrl+R | Retry recording |
-| Authentication notice | Enter | Continue to administrator authentication |
-| Any page | Esc | Go back, cancel a move, or close the panel |
+| Keys | Action |
+| --- | --- |
+| ↑ / ↓ | Navigate |
+| Enter | Select or continue |
+| Hold Alt + ↑ / ↓ | Move a language; release Alt to save |
+| Delete | Remove the selected input language |
+| Type in a language list | Filter languages |
+| Ctrl+S / Ctrl+R | Save / retry a recorded hotkey |
+| Esc | Back, cancel, or close |
 
-You can also drag languages with the mouse. Drop inside the list to save,
-or outside it to cancel. Clicking × removes a language. Clicking outside
-the panel closes it.
+Languages can also be reordered by dragging. Drop outside the list to cancel.
 
-## Language settings
+## Configuration
 
-**Change my display language** sets the language for your desktop and
-applications at the next login. **Use system default** removes this plugin's
-account override.
+Keyboard changes preserve unrelated settings and XKB options, validate the
+keymap, and use atomic writes with a backup and rollback. Account language
+settings use `~/.config/uwsm/env.d/zz-language-input`; system language changes
+use `localectl`. Omarchy core files are never modified.
 
-**Change system language** changes the machine-wide default. Applications
-with their own language preferences, accounts with overrides, and untranslated
-interface text may continue using their existing language.
-
-The lists include generated locales and supported UTF-8 locales. A shield
-marks choices requiring administrator authentication. Selecting one opens a
-notice with **Enter Continue · Esc Back**. Ungenerated locales are generated
-on demand; existing generated locales can be selected for your account without
-root privileges.
-
-A pending change displays **System language change pending. Please restart or
-relog.** The plugin does not log you out or restart the machine automatically.
-
-## Configuration and safeguards
-
-Keyboard changes manage marked blocks in `~/.config/hypr/input.lua`, retaining
-unrelated configuration and non-switching XKB options. The backend validates
-and compiles the proposed keymap before writing, checks for concurrent edits,
-backs up the file to `input.lua.language-input.bak`, writes atomically, and
-verifies Hyprland after reload. Failed application triggers rollback when safe.
-
-Account language changes use an owned UWSM fragment at
-`~/.config/uwsm/env.d/zz-language-input`. System language changes use
-`localectl`. Locale generation uses `pkexec /usr/bin/localedef --no-archive`;
-it does not edit `locale.gen` or system locale source files. Other locale
-categories are preserved. Omarchy core files are never modified.
-
-### Current limits
-
-- One to four keyboard layouts; device-specific overrides are retained and
-  reported rather than edited.
-- Recorded shortcuts must map to supported forward-cycling XKB `grp:*`
-  options. Arbitrary combinations are rejected; no Hyprland bindings are created.
-- Existing shortcuts can intercept recording events. Use the shortcut list
-  when a combination cannot be captured.
-- Full logout/login behavior, privileged locale changes, and physical
-  side-specific modifier recording still need manual integration testing.
+Supports one to four input layouts. Device-specific overrides are retained.
+Unsupported shortcut combinations are rejected rather than creating bindings.
 
 ## Development
 
-Run checks from the repository root:
+QML handles presentation; `keyboard.py`, `locale_backend.py`, and
+`menu_setup.py` handle system settings and menu registration. The root
+`manifest.json` registers the `xarishark.language-input` panel.
+
+Run from the repository root:
 
 ```sh
 omarchy plugin validate .
@@ -168,39 +87,9 @@ python3 -m unittest -v test_keyboard.py test_locale_backend.py test_menu_setup.p
 node test_shortcut.cjs
 ```
 
-To install a local development copy:
-
-```sh
-plugin_dir="$HOME/.config/omarchy/plugins/xarishark.language-input"
-mkdir -p "$plugin_dir"
-cp manifest.json *.qml Shortcut.js keyboard.py locale_backend.py menu_setup.py README.md LICENSE "$plugin_dir/"
-omarchy-shell shell rescanPlugins
-omarchy plugin enable xarishark.language-input
-omarchy restart shell
-omarchy-shell shell summon xarishark.language-input '{}'
-```
-
-Discovery is asynchronous; retry enabling if the plugin is not known yet.
-Copy updated files again and restart the shell to clear cached QML. Validate
-keyboard and locale integration in the real running Omarchy session.
-
-### Project structure
-
-| Files | Responsibility |
-| --- | --- |
-| `manifest.json` | Root manifest and panel registration |
-| `Panel.qml`, `CenteredPanel.qml` | Panel lifecycle, navigation, and centered window |
-| `InputLanguages.qml`, `LanguagePicker.qml` | Layout editing and language/variant browsing |
-| `SwitchHotkey.qml`, `Shortcut.js`, `Keycaps.qml` | Shortcut recording, mapping, and display |
-| `SystemLanguage.qml`, `LocaleModel.qml` | Language selection and asynchronous locale state |
-| `LayoutPicker.qml` | Shared list and filtering UI |
-| `menu_setup.py` | Automatic user menu registration |
-| `keyboard.py`, `locale_backend.py` | System discovery, validation, and configuration writes |
-| `test_*.py`, `test_shortcut.cjs` | Backend and shortcut regression tests |
-
-`Panel.qml` implements `open(payloadJson)` and `close()`. Both Python helpers
-expose `read` and `apply` commands with JSON input/output; presentation and
-system changes remain separate. Backend tests use isolated fixtures.
+Node.js is needed only for shortcut tests. Test integration in a real Omarchy
+session. Privileged locale changes, full logout/login behavior, and physical
+side-specific modifier recording still need manual integration testing.
 
 ## License
 
